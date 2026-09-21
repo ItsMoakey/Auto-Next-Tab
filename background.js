@@ -20,29 +20,42 @@ chrome.action.onClicked.addListener(async () => {
 });
 
 chrome.runtime.onMessage.addListener((msg, sender) => {
-  if (msg.type === "video-ended" && sender.tab) handleEnded(sender.tab);
+  if (!sender.tab) return;
+  if (msg.type === "video-ended") startCountdown(sender.tab);
+  else if (msg.type === "countdown-done") switchAndClose(sender.tab);
 });
 
-async function handleEnded(tab) {
-  if (handling.has(tab.id)) return; // several frames may fire at once
+// Returns the tab to switch to, or null if we shouldn't act on this tab.
+async function pickNextTab(tab) {
+  if (!(await isEnabled())) return null;
+  if (tab.pinned) return null;
+  const tabs = (await chrome.tabs.query({ windowId: tab.windowId })).sort(
+    (a, b) => a.index - b.index
+  );
+  const others = tabs.filter((t) => t.id !== tab.id);
+  if (!others.length) return null; // never close the last tab
+  // Next tab to the right; if this was the last one, wrap to the first.
+  return tabs.find((t) => t.index > tab.index) || others[0];
+}
+
+async function startCountdown(tab) {
+  if (!(await pickNextTab(tab))) return;
+  // The popup lives in the top frame only.
+  chrome.tabs
+    .sendMessage(tab.id, { type: "start-countdown" }, { frameId: 0 })
+    .catch(() => {});
+}
+
+async function switchAndClose(tab) {
+  if (handling.has(tab.id)) return;
   handling.add(tab.id);
   try {
-    if (!(await isEnabled())) return;
-    if (tab.pinned) return;
-
-    const tabs = (await chrome.tabs.query({ windowId: tab.windowId })).sort(
-      (a, b) => a.index - b.index
-    );
-    const others = tabs.filter((t) => t.id !== tab.id);
-    if (!others.length) return; // never close the last tab
-
-    // Next tab to the right; if this was the last one, wrap to the first.
-    const next = tabs.find((t) => t.index > tab.index) || others[0];
+    const next = await pickNextTab(tab);
+    if (!next) return;
 
     await chrome.tabs.update(next.id, { active: true });
     await chrome.tabs.remove(tab.id);
 
-    // Ask the newly focused tab to start playing (retry while it wakes up).
     for (let i = 0; i < 3; i++) {
       try {
         await chrome.tabs.sendMessage(next.id, { type: "play-video" });
