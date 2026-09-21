@@ -34,17 +34,17 @@
     root.innerHTML = `
       <style>
         .box {
-          position: fixed; right: 32px; bottom: 32px; z-index: 2147483647;
-          display: flex; align-items: center; gap: 28px;
-          padding: 24px 32px; border-radius: 16px;
-          background: rgba(20,20,20,.95); color: #fff;
-          font: 22px/1.3 system-ui, sans-serif;
-          box-shadow: 0 8px 32px rgba(0,0,0,.55);
+          position: fixed; right: 30px; bottom: 30px; z-index: 2147483647;
+          display: flex; align-items: center; gap: 21px;
+          padding: 18px 24px; border-radius: 15px;
+          background: rgba(20,20,20,.94); color: #fff;
+          font: 21px/1.3 system-ui, sans-serif;
+          box-shadow: 0 6px 27px rgba(0,0,0,.5);
         }
-        b { display: inline-block; min-width: 1.2ch; text-align: center; font-size: 40px; }
+        b { display: inline-block; min-width: 1ch; text-align: center; font-size: 24px; }
         button {
-          border: 0; border-radius: 10px; padding: 14px 30px; cursor: pointer;
-          background: #e53935; color: #fff; font: inherit; font-weight: 700;
+          border: 0; border-radius: 9px; padding: 9px 21px; cursor: pointer;
+          background: #e53935; color: #fff; font: inherit; font-weight: 600;
         }
         button:hover { background: #c62828; }
       </style>
